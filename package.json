@@ -1,0 +1,63 @@
+{
+  "name": "liblinear-js",
+  "version": "2.4.7",
+  "description": "A port of liblinear to javascript using emscripten",
+  "main": "wasm.js",
+  "files": [
+    "src",
+    "out",
+    "dist",
+    "asm.js",
+    "wasm.js",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "run-s build-emscripten webpack-build",
+    "build-emscripten-clean": "make clean && rm -rf out/emscripten/",
+    "build-emscripten-wasm": "rimraf out/wasm && mkdir -p out/wasm && make wasm && cat src/pre.js out/emscripten/wasm/liblinear.js src/post.js > out/wasm/liblinear.js && cp out/emscripten/wasm/liblinear.wasm out/wasm/liblinear.wasm",
+    "build-emscripten-asm": "rimraf out/asm &&  mkdir -p out/asm && make asm && cat src/pre.js out/emscripten/asm/liblinear.js src/post.js > out/asm/liblinear.js",
+    "build-emscripten": "run-s build-emscripten-wasm build-emscripten-asm build-emscripten-clean",
+    "webpack-build": "rimraf dist/browser && mkdir -p dist/browser/asm dist/browser/wasm &&  webpack --config webpack/webpack.wasm.js && webpack --config webpack/webpack.asm.js &&  cp out/wasm/liblinear.wasm dist/browser/wasm/",
+    "eslint": "eslint src/loadLINEAR.js examples",
+    "eslint-fix": "eslint --fix src/loadLINEAR.js examples",
+    "prepare": "git submodule init && git submodule update"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com:piment831/liblinear-js.git"
+  },
+  "keywords": [
+    "svm",
+    "liblinear",
+    "machine",
+    "learning",
+    "support",
+    "vector",
+    "machines"
+  ],
+  "author": "piment831",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/piment831/liblinear-js/issues"
+  },
+  "homepage": "https://github.com/piment831/liblinear-js#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "babel-eslint": "^10.1.0",
+    "eslint": "^4.19.1",
+    "eslint-config-cheminfo": "^1.17.2",
+    "eslint-config-neptun-react": "^1.0.2",
+    "eslint-plugin-import": "^2.10.0",
+    "eslint-plugin-jest": "^21.15.0",
+    "eslint-plugin-no-only-tests": "^2.0.0",
+    "eslint-plugin-react": "^7.5.1",
+    "jsdoc-to-markdown": "^3.0.3",
+    "less": "^2.7.3",
+    "npm-run-all": "^4.1.2",
+    "rimraf": "^2.6.2",
+    "webpack": "^3.11.0",
+    "webpack-bundle-analyzer": "^2.9.1",
+    "webpack-dev-server": "^2.9.7",
+    "webpack-visualizer-plugin": "^0.1.11"
+  }
+}
