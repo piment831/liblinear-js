@@ -1,78 +1,52 @@
-Port of to port libsvm v3.22 using [emscripten](https://github.com/kripken/emscripten) , for usage in the browser or nodejs. 2 build targets: asm and WebAssembly.
+Port of to port liblinear v2.47 using [emscripten](https://github.com/kripken/emscripten) , for usage in the browser or nodejs. 2 build targets: asm and WebAssembly.
 
-What is libsvm?
-libsvm is a [c++ library](https://github.com/cjlin1/libsvm) developped by Chih-Chung Chang and Chih-Jen Lin that allows to do support vector machine (aka SVM) classification and regression.
+What is liblinear?
+liblinear is a [c++ library](https://github.com/cjlin1/liblinear) developped by Chih-Chung Chang and Chih-Jen Lin that allows to do solving large-scale regularized linear classification, regression and outlier detection.
 
-Resources about libsvm:
-- [libsvm website](https://www.csie.ntu.edu.tw/~cjlin/libsvm/)
-- [libsvm github repository](https://github.com/cjlin1/libsvm)
+Resources about liblinear:
+- [liblinear website](https://www.csie.ntu.edu.tw/~cjlin/liblinear/)
+- [liblinear github repository](https://github.com/cjlin1/liblinear)
 - [Wikipedia article](https://en.wikipedia.org/wiki/Support_vector_machine)
-- Chih-Chung Chang and Chih-Jen Lin, LIBSVM : a library for support vector machines. ACM Transactions on Intelligent Systems and Technology, 2:27:1--27:27, 2011.
-
-
 
 # Usage
 ## Load
 The main entry point loads the WebAssembly build and is asynchronous.
 ```js
-require('libsvm-js').then(SVM => {
-    const svm = new SVM(); // ...
+require('liblinear-js').then(LINEAR => {
+    const linear = new LINEAR(); // ...
 });
 ```
 
 There is an alternative entry point if you want to use asm build. This entrypoint is asynchronous.
 ```js
-const SVM = await require('libsvm-js/asm');
-const svm = new SVM(); // ...
+const LINEAR = await require('liblinear-js/asm');
+const linear = new LINEAR(); // ...
 ```
 
 ## Load in a web browser
 The npm package contains a bundle for the browser that works with AMD and browser globals. There is one bundle for the asm build and another for the web assembly build. They are located in the `dist/browser` directory of the package. You can load them into your web page with a `script` tag. For the web assembly module, make sure that the libsvm.wasm file is served from the same relative path as the js file.
 
 ## Basic usage
-This example illustrates how to use the library to train and use an SVM classifier.
+This example illustrates how to use the library to train and use an LINEAR classifier.
 ```js
 
-async function xor() {
-    const SVM = await require('libsvm-js');
-    const svm = new SVM({
-        kernel: SVM.KERNEL_TYPES.RBF, // The type of kernel I want to use
-        type: SVM.SVM_TYPES.C_SVC,    // The type of SVM I want to run
-        gamma: 1,                     // RBF kernel gamma parameter
-        cost: 1                       // C_SVC cost parameter
-    });
+async function andOp() {
+    const LINEAR = await require('liblinear-js');
+    const linear = new LINEAR();
 
-    // This is the xor problem
+    // This is the and problem
     //
-    //  1  0
+    //  1  1
     //  0  1
-    const features = [[0, 0], [1, 1], [1, 0], [0, 1]];
-    const labels = [0, 0, 1, 1];
-    svm.train(features, labels);  // train the model
-    const predictedLabel = svm.predictOne([0.7, 0.8]);
-    console.log(predictedLabel) // 0
+    const features = [[0, 1], [1, 1], [0, 0], [1, 0]];
+    const labels = [1, 1, 0, 1];
+    linear.train(features, labels);  // train the model
+    const predictedLabel = linear.predict(features);
+    console.log(predictedLabel) // [ 1, 1, 0, 1 ]
 }
 
-xor().then(() => console.log('done!'));
+andOp().then(() => console.log('done!'));
 ```
-
-# Benchmarks
-You can compare the performance of the library in various environments. Run `npm run benchmark` to run the benchmarks with native c/c++ code and with the compiled code with your local version of node.js. For browser performance, go to the [web benchmark page](https://mljs.github.io/libsvm/#benchmarks).
-
-Speed is mainly affected by the javascript engine that compiles it. Since WebAssembly has been stabilized and is an optimization phase, more recent engines are almost always faster.
-
-Speed is also affected by the version of emscripten that generated the build or the options used in the build. I will try to keep up with any improvement that might significantly impact the performance.
-
-## Cross-validation benchmark
-I report the results here for the cross-validation benchmark on the iris dataset to get a feeling for how performance compares on different platforms. There are other benchmarks that can be run from the terminal in node.js or in the browser. The performance results are given relative to how they run natively (with compiled c++ code). The benchmarks only consider runtime performance, not load and parse performance.
-
-| Platform | Rel asm perf | Rel wasm perf |
-| --- | --- | --- |
-| Native | 100% | 100% |
-| Node.js 8.1.2 | 34.2% | 52.6% |
-| Node.js v7.10.0 | 14.4% | N/A |
-| Chrome 59.0.3071.115  | 36.2% | 51.3% |
-| Firefox 54.0 | 35.5% | 70.4% |
 
 
 # What are asm and WebAssembly ?
@@ -88,240 +62,45 @@ Both. You should try to use WebAssembly first and fall back to asm in order to s
 WebAssembly is currently supported in the latest stable versions of Chrome, Firefox and on preview versions of Safari and Edge.
 
 # API Documentation
-<a name="SVM"></a>
+<a name="LINEAR"></a>
 
-## SVM
+## LINEAR
 **Kind**: global class  
 
-* [SVM](#SVM)
-    * [new SVM(options)](#new_SVM_new)
+* [LINEAR](#LINEAR)
+    * [new LINEAR(options)](#new_LINEAR_new)
     * _instance_
         * [.train(samples, labels)](#SVM+train)
-        * [.crossValidation(samples, labels, kFold)](#SVM+crossValidation) ⇒ <code>[ &#x27;Array&#x27; ].&lt;number&gt;</code>
-        * [.free()](#SVM+free)
-        * [.predictOne(sample)](#SVM+predictOne) ⇒ <code>number</code>
-        * [.predict(samples)](#SVM+predict) ⇒ <code>[ &#x27;Array&#x27; ].&lt;number&gt;</code>
-        * [.predictProbability(samples)](#SVM+predictProbability) ⇒ <code>[ &#x27;Array&#x27; ].&lt;object&gt;</code>
-        * [.predictOneProbability(sample)](#SVM+predictOneProbability) ⇒ <code>object</code>
-        * [.predictOneInterval(sample, confidence)](#SVM+predictOneInterval) ⇒ <code>object</code>
-        * [.predictInterval(samples, confidence)](#SVM+predictInterval) ⇒ <code>[ &#x27;Array&#x27; ].&lt;object&gt;</code>
-        * [.getLabels()](#SVM+getLabels) ⇒ <code>[ &#x27;Array&#x27; ].&lt;number&gt;</code>
-        * [.getSVIndices()](#SVM+getSVIndices) ⇒ <code>[ &#x27;Array&#x27; ].&lt;number&gt;</code>
-        * [.serializeModel()](#SVM+serializeModel) ⇒ <code>string</code>
+        * [.crossValidation(samples, labels, kFold)](#LINEAR+crossValidation) ⇒ <code>[ &#x27;Array&#x27; ].&lt;number&gt;</code>
+        * [.free()](#LINEAR+free)
+        * [.predictOne(sample)](#LINEAR+predictOne) ⇒ <code>number</code>
+        * [.predict(samples)](#LINEAR+predict) ⇒ <code>[ &#x27;Array&#x27; ].&lt;number&gt;</code>
+        * [.predictProbability(samples)](#LINEAR+predictProbability) ⇒ <code>[ &#x27;Array&#x27; ].&lt;object&gt;</code>
+        * [.predictOneProbability(sample)](#LINEAR+predictOneProbability) ⇒ <code>object</code>
+        * [.predictOneInterval(sample, confidence)](#LINEAR+predictOneInterval) ⇒ <code>object</code>
+        * [.predictInterval(samples, confidence)](#LINEAR+predictInterval) ⇒ <code>[ &#x27;Array&#x27; ].&lt;object&gt;</code>
+        * [.getLabels()](#LINEAR+getLabels) ⇒ <code>[ &#x27;Array&#x27; ].&lt;number&gt;</code>
+        * [.serializeModel()](#LINEAR+serializeModel) ⇒ <code>string</code>
     * _static_
-        * [.SVM_TYPES](#SVM.SVM_TYPES) : <code>Object</code>
-        * [.KERNEL_TYPES](#SVM.KERNEL_TYPES) : <code>Object</code>
-        * [.load(serializedModel)](#SVM.load) ⇒ [<code>SVM</code>](#SVM)
+        * [.LINEAR_TYPES](#LINEAR.LINEAR_TYPES) : <code>Object</code>
+        * [.load(serializedModel)](#LINEAR.load) ⇒ [<code>LINEAR</code>](#LINEAR)
 
-<a name="new_SVM_new"></a>
+<a name="new_LINEAR_new"></a>
 
-### new SVM(options)
+### new LINEAR(options)
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | options | <code>object</code> |  |  |
-| [options.type] | <code>number</code> | <code>SVM_TYPES.C_SVC</code> | Type of SVM to perform, |
-| [options.kernel] | <code>number</code> | <code>KERNEL_TYPES.RBF</code> | Kernel function, |
-| [options.degree] | <code>number</code> | <code>3</code> | Degree of polynomial, for polynomial kernel |
-| [options.gamma] | <code>number</code> |  | Gamma parameter of the RBF, Polynomial and Sigmoid kernels. Default value is 1/num_features |
-| [options.coef0] | <code>number</code> | <code>0</code> | coef0 parameter for Polynomial and Sigmoid kernels |
-| [options.cost] | <code>number</code> | <code>1</code> | Cost parameter, for C SVC, Epsilon SVR and NU SVR |
-| [options.nu] | <code>number</code> | <code>0.5</code> | For NU SVC and NU SVR |
-| [options.epsilon] | <code>number</code> | <code>0.1</code> | For epsilon SVR |
-| [options.cacheSize] | <code>number</code> | <code>100</code> | Cache size in MB |
-| [options.tolerance] | <code>number</code> | <code>0.001</code> | Tolerance |
-| [options.shrinking] | <code>boolean</code> | <code>true</code> | Use shrinking euristics (faster), |
-| [options.probabilityEstimates] | <code>boolean</code> | <code>false</code> | weather to train SVC/SVR model for probability estimates, |
+| [options.type] | <code>number</code> | <code>1</code> | set type of solver<br>for multi-class classification<br>&nbsp;&nbsp;&nbsp;&nbsp;0 -- L2-regularized logistic regression (primal)<br>&nbsp;&nbsp;&nbsp;&nbsp;1 -- L2-regularized L2-loss support vector classification (dual)<br>&nbsp;&nbsp;&nbsp;&nbsp;2 -- L2-regularized L2-loss support vector classification (primal)<br>&nbsp;&nbsp;&nbsp;&nbsp;3 -- L2-regularized L1-loss support vector classification (dual)<br>&nbsp;&nbsp;&nbsp;&nbsp;4 -- support vector classification by Crammer and Singer<br>&nbsp;&nbsp;&nbsp;&nbsp;5 -- L1-regularized L2-loss support vector classification<br>&nbsp;&nbsp;&nbsp;&nbsp;6 -- L1-regularized logistic regression<br>&nbsp;&nbsp;&nbsp;&nbsp;7 -- L2-regularized logistic regression (dual)<br>for regression<br>&nbsp;&nbsp;&nbsp;&nbsp;11 -- L2-regularized L2-loss support vector regression (primal)<br>&nbsp;&nbsp;&nbsp;&nbsp;12 -- L2-regularized L2-loss support vector regression (dual)<br>&nbsp;&nbsp;&nbsp;&nbsp;13 -- L2-regularized L1-loss support vector regression (dual)<br>for outlier detection<br>&nbsp;&nbsp;&nbsp;&nbsp;21 -- one-class support vector machine (dual) |
+| [options.cost] | <code>number</code> | <code>1</code> | set the parameter C |
+| [options.epsilon] | <code>number</code> | <code>0.1</code> | set the epsilon in loss function of epsilon-SVR |
+| [options.nu] | <code>number</code> | <code>0.5</code> | set the parameter nu of one-class SVM |
+| [options.tolerance] | <code>number</code> | <code>0.001</code> | set tolerance of termination criterion<br>-s 0 and 2<br>&nbsp;&nbsp;&nbsp;&nbsp;\|f'(w)\|_2 <= eps*min(pos,neg)/l*\|f'(w0)\|_2,<br>&nbsp;&nbsp;&nbsp;&nbsp;where f is the primal function and pos/neg are # of<br>positive/negative data (default 0.01)<br>-s 11<br>&nbsp;&nbsp;&nbsp;&nbsp;\|f'(w)\|_2 <= eps*\|f'(w0)\|_2 (default 0.0001)<br>-s 1, 3, 4, 7, and 21<br>&nbsp;&nbsp;&nbsp;&nbsp;Dual maximal violation <= eps; similar to libsvm (default 0.1 except 0.01 for -s 21)<br>-s 5 and 6<br>&nbsp;&nbsp;&nbsp;&nbsp;\|f'(w)\|_1 <= eps*min(pos,neg)/l*\|f'(w0)\|_1,<br>&nbsp;&nbsp;&nbsp;&nbsp;where f is the primal function (default 0.01)<br>-s 12 and 13<br>&nbsp;&nbsp;&nbsp;&nbsp;\|f'(alpha)\|_1 <= eps \|f'(alpha0)\|,<br>&nbsp;&nbsp;&nbsp;&nbsp;where f is the dual function (default 0.1) |
+| [options.bias] | <code>number</code> | <code>-1</code> | if bias >= 0, instance x becomes [x; bias]; if < 0, no bias term added |
+| [options.regularize] |  |  | not regularize the bias; must with -B 1 to have the bias; DON'T use this unless you know what it is<br>(for -s 0, 2, 5, 6, 11) |
 | [options.weight] | <code>object</code> |  | Set weight for each possible class |
 | [options.quiet] | <code>boolean</code> | <code>true</code> | Print info during training if false |
-
-<a name="SVM+train"></a>
-
-### svM.train(samples, labels)
-Trains the SVM model.
-
-**Kind**: instance method of [<code>SVM</code>](#SVM)  
-**Throws**:
-
-- if SVM instance was instantiated from SVM.load.
-
-
-| Param | Type | Description |
-| --- | --- | --- |
-| samples | <code>[ &#x27;Array&#x27; ].&lt;Array.&lt;number&gt;&gt;</code> | The training samples. First level of array are the samples, second level are the individual features |
-| labels | <code>[ &#x27;Array&#x27; ].&lt;number&gt;</code> | The training labels. It should have the same size as the samples. If you are training a classification model, the labels should be distinct integers for each class. If you are training a regression model, each label should be the value of the predicted variable. |
-
-<a name="SVM+crossValidation"></a>
-
-### svM.crossValidation(samples, labels, kFold) ⇒ <code>[ &#x27;Array&#x27; ].&lt;number&gt;</code>
-Performs k-fold cross-validation (KF-CV). KF-CV separates the data-set into kFold random equally sized partitions,
-and uses each as a validation set, with all other partitions used in the training set. Observations left over
-from if kFold does not divide the number of observations are left out of the cross-validation process. If
-kFold is one, this is equivalent to a leave-on-out cross-validation
-
-**Kind**: instance method of [<code>SVM</code>](#SVM)  
-**Returns**: <code>[ &#x27;Array&#x27; ].&lt;number&gt;</code> - The array of predicted labels produced by the cross validation. Has a size equal to
-the number of samples provided as input.  
-**Throws**:
-
-- if SVM instance was instantiated from SVM.load.
-
-
-| Param | Type | Description |
-| --- | --- | --- |
-| samples | <code>[ &#x27;Array&#x27; ].&lt;Array.&lt;number&gt;&gt;</code> | The training samples. |
-| labels | <code>[ &#x27;Array&#x27; ].&lt;number&gt;</code> | The training labels. |
-| kFold | <code>number</code> | Number of datasets into which to split the training set. |
-
-<a name="SVM+free"></a>
-
-### svM.free()
-Free the memory allocated for the model. Since this memory is stored in the memory model of emscripten, it is
-allocated within an ArrayBuffer and WILL NOT BE GARBARGE COLLECTED, you have to explicitly free it. So
-not calling this will result in memory leaks. As of today in the browser, there is no way to hook the
-garbage collection of the SVM object to free it automatically.
-Free the memory that was created by the compiled libsvm library to.
-store the model. This model is reused every time the predict method is called.
-
-**Kind**: instance method of [<code>SVM</code>](#SVM)  
-<a name="SVM+predictOne"></a>
-
-### svM.predictOne(sample) ⇒ <code>number</code>
-Predict the label of one sample.
-
-**Kind**: instance method of [<code>SVM</code>](#SVM)  
-**Returns**: <code>number</code> - - The predicted label.  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| sample | <code>[ &#x27;Array&#x27; ].&lt;number&gt;</code> | The sample to predict. |
-
-<a name="SVM+predict"></a>
-
-### svM.predict(samples) ⇒ <code>[ &#x27;Array&#x27; ].&lt;number&gt;</code>
-Predict the label of many samples.
-
-**Kind**: instance method of [<code>SVM</code>](#SVM)  
-**Returns**: <code>[ &#x27;Array&#x27; ].&lt;number&gt;</code> - - The predicted labels.  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| samples | <code>[ &#x27;Array&#x27; ].&lt;Array.&lt;number&gt;&gt;</code> | The samples to predict. |
-
-<a name="SVM+predictProbability"></a>
-
-### svM.predictProbability(samples) ⇒ <code>[ &#x27;Array&#x27; ].&lt;object&gt;</code>
-Predict the label with probability estimate of many samples.
-
-**Kind**: instance method of [<code>SVM</code>](#SVM)  
-**Returns**: <code>[ &#x27;Array&#x27; ].&lt;object&gt;</code> - - An array of objects containing the prediction label and the probability estimates for each label  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| samples | <code>[ &#x27;Array&#x27; ].&lt;Array.&lt;number&gt;&gt;</code> | The samples to predict. |
-
-<a name="SVM+predictOneProbability"></a>
-
-### svM.predictOneProbability(sample) ⇒ <code>object</code>
-Predict the label with probability estimate.
-
-**Kind**: instance method of [<code>SVM</code>](#SVM)  
-**Returns**: <code>object</code> - - An object containing the prediction label and the probability estimates for each label  
-
-| Param | Type |
-| --- | --- |
-| sample | <code>[ &#x27;Array&#x27; ].&lt;number&gt;</code> | 
-
-<a name="SVM+predictOneInterval"></a>
-
-### svM.predictOneInterval(sample, confidence) ⇒ <code>object</code>
-Predict a regression value with a confidence interval
-
-**Kind**: instance method of [<code>SVM</code>](#SVM)  
-**Returns**: <code>object</code> - - An object containing the prediction value and the lower and upper bounds of the confidence interval  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| sample | <code>[ &#x27;Array&#x27; ].&lt;number&gt;</code> |  |
-| confidence | <code>number</code> | A value between 0 and 1. For example, a value 0.95 will give you the 95% confidence interval of the predicted value. |
-
-<a name="SVM+predictInterval"></a>
-
-### svM.predictInterval(samples, confidence) ⇒ <code>[ &#x27;Array&#x27; ].&lt;object&gt;</code>
-Predict regression values with confidence intervals
-
-**Kind**: instance method of [<code>SVM</code>](#SVM)  
-**Returns**: <code>[ &#x27;Array&#x27; ].&lt;object&gt;</code> - - An array of objects each containing the prediction label and the probability estimates for each label  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| samples | <code>[ &#x27;Array&#x27; ].&lt;Array.&lt;number&gt;&gt;</code> | An array of samples. |
-| confidence | <code>number</code> | A value between 0 and 1. For example, a value 0.95 will give you the 95% confidence interval of the predicted value. |
-
-<a name="SVM+getLabels"></a>
-
-### svM.getLabels() ⇒ <code>[ &#x27;Array&#x27; ].&lt;number&gt;</code>
-Get the array of labels from the model. Useful when creating an SVM instance with SVM.load
-
-**Kind**: instance method of [<code>SVM</code>](#SVM)  
-**Returns**: <code>[ &#x27;Array&#x27; ].&lt;number&gt;</code> - - The list of labels.  
-<a name="SVM+getSVIndices"></a>
-
-### svM.getSVIndices() ⇒ <code>[ &#x27;Array&#x27; ].&lt;number&gt;</code>
-Get the indices of the support vectors from the training set passed to the train method.
-
-**Kind**: instance method of [<code>SVM</code>](#SVM)  
-**Returns**: <code>[ &#x27;Array&#x27; ].&lt;number&gt;</code> - - The list of indices from the training samples.  
-<a name="SVM+serializeModel"></a>
-
-### svM.serializeModel() ⇒ <code>string</code>
-Uses libsvm's serialization method of the model.
-
-**Kind**: instance method of [<code>SVM</code>](#SVM)  
-**Returns**: <code>string</code> - The serialization string.  
-<a name="SVM.SVM_TYPES"></a>
-
-### SVM.SVM\_TYPES : <code>Object</code>
-SVM classification and regression types
-
-**Kind**: static property of [<code>SVM</code>](#SVM)  
-**Properties**
-
-| Name | Description |
-| --- | --- |
-| C_SVC | The C support vector classifier type |
-| NU_SVC | The nu support vector classifier type |
-| ONE_CLASS | The one-class support vector classifier type |
-| EPSILON_SVR | The epsilon support vector regression type |
-| NU_SVR | The nu support vector regression type |
-
-<a name="SVM.KERNEL_TYPES"></a>
-
-### SVM.KERNEL\_TYPES : <code>Object</code>
-SVM kernel types
-
-**Kind**: static property of [<code>SVM</code>](#SVM)  
-**Properties**
-
-| Name | Description |
-| --- | --- |
-| LINEAR | Linear kernel |
-| POLYNOMIAL | Polynomial kernel |
-| RBF | Radial basis function (gaussian) kernel |
-| SIGMOID | Sigmoid kernel |
-
-<a name="SVM.load"></a>
-
-### SVM.load(serializedModel) ⇒ [<code>SVM</code>](#SVM)
-Create a SVM instance from the serialized model.
-
-**Kind**: static method of [<code>SVM</code>](#SVM)  
-**Returns**: [<code>SVM</code>](#SVM) - - SVM instance that contains the model.  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| serializedModel | <code>string</code> | The serialized model. |
-
 
 # LICENSE
 BSD-3-Clause

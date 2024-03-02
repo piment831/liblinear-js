@@ -25,18 +25,16 @@ module.exports = function (liblinear) {
          * @constructor
          * @param {object} options
          * @param {number} [options.s=LINEAR_TYPES.L2R_L2LOSS_SVC_DUAL] - solver_type,
-         * @param {number} [options.degree=3] - Degree of polynomial, for polynomial kernel
-         * @param {number} [options.gamma] -  Gamma parameter of the RBF, Polynomial and Sigmoid kernels. Default value is 1/num_features
-         * @param {number} [options.coef0=0] - coef0 parameter for Polynomial and Sigmoid kernels
-         * @param {number} [options.cost=1] - Cost parameter, for C SVC, Epsilon SVR and NU SVR
-         * @param {number} [options.nu=0.5] - For NU SVC and NU SVR
-         * @param {number} [options.epsilon=0.1] - For epsilon SVR
-         * @param {number} [options.cacheSize=100] - Cache size in MB
-         * @param {number} [options.tolerance=0.001] - Tolerance
-         * @param {boolean} [options.shrinking=true] - Use shrinking euristics (faster),
-         * @param {boolean} [options.probabilityEstimates=false] - weather to train SVC/SVR model for probability estimates,
-         * @param {object} [options.weight] - Set weight for each possible class
-         * @param {boolean} [options.quiet=true] - Print info during training if false
+         * @param {number} [options.c=1] - C,
+         * @param {number} [options.p=0.1] - p
+         * @param {number} [options.n=0.5] - nu
+         * @param {number} [options.e=INF] - eps
+         * @param {number} [options.nr_weight=0] - Cost parameter, for C SVC, Epsilon SVR and NU SVR
+         * @param {number} [options.regularize_bias=1] - For NU SVC and NU SVR
+         * @param {number} [options.weight_label] - For epsilon SVR
+         * @param {number} [options.weight] - Cache size in MB
+         * @param {number} [options.init_sol] - Tolerance
+         * @param {boolean} [options.q=true] - Print info during training if false
          */
     constructor(options) {
       this.options = Object.assign({}, options);
